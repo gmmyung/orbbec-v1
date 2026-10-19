@@ -1,5 +1,7 @@
 use eframe::egui;
-use orbbec_v1::{Context, Format, Pipeline, Sensor, VideoFrame, VideoProfile};
+use orbbec_v1::{
+    Context, Format, Pipeline, PointCloud, PointCloudFilter, Sensor, VideoFrame, VideoProfile,
+};
 use std::{
     error::Error,
     sync::{
@@ -23,12 +25,15 @@ pub struct Capture {
     pub scale_mm: f32,
     pub color: Option<Plane<u8>>,
     pub infrared: Option<Plane<u16>>,
+    pub point_cloud: Option<Arc<PointCloud>>,
     pub frame_index: u64,
     pub count: u64,
     pub fps: f32,
 }
 
 pub struct CameraState {
+    pub want_point_cloud: bool,
+    pub cloud_error: Option<String>,
     pub message: String,
     pub device: String,
     pub streams: String,
@@ -39,6 +44,8 @@ pub struct CameraState {
 impl Default for CameraState {
     fn default() -> Self {
         Self {
+            want_point_cloud: false,
+            cloud_error: None,
             message: "Connecting…".into(),
             device: String::new(),
             streams: String::new(),
@@ -163,6 +170,8 @@ fn run(
     for profile in &profiles {
         eprintln!("Viewer stream: {profile}");
     }
+    let mut cloud_filter: Option<PointCloudFilter<'_>> = None;
+    let mut cloud_failed = false;
     let mut count = 0_u64;
     let mut fps = 0.0;
     let mut fps_start = Instant::now();
@@ -190,6 +199,28 @@ fn run(
         } else {
             None
         };
+        let want_point_cloud = shared.lock().unwrap().want_point_cloud;
+        let point_cloud = if want_point_cloud && !cloud_failed {
+            let result = (|| -> orbbec_v1::Result<Option<PointCloud>> {
+                if cloud_filter.is_none() {
+                    let filter = PointCloudFilter::new(&pipeline)?;
+                    eprintln!("Viewer point cloud calibration: {:?}", filter.intrinsics());
+                    cloud_filter = Some(filter);
+                }
+                cloud_filter.as_mut().unwrap().process(&set)
+            })();
+            match result {
+                Ok(cloud) => cloud.map(Arc::new),
+                Err(error) => {
+                    shared.lock().unwrap().cloud_error = Some(error.to_string());
+                    eprintln!("Point cloud unavailable: {error}");
+                    cloud_failed = true;
+                    None
+                }
+            }
+        } else {
+            None
+        };
         count += 1;
         fps_count += 1;
         last_frame = Instant::now();
@@ -209,6 +240,7 @@ fn run(
             scale_mm: depth.scale_mm()?,
             color,
             infrared,
+            point_cloud,
             frame_index: depth.video().index()?,
             count,
             fps,
@@ -220,6 +252,7 @@ fn run(
         drop(state);
         ctx.request_repaint();
     }
+    drop(cloud_filter);
     pipeline.stop()?;
     eprintln!("Viewer stopped after {count} framesets");
     Ok(())

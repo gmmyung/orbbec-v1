@@ -10,3 +10,5 @@ license.workspace = true
 orbbec-v1 = { path = "../orbbec-v1" }
 eframe = { version = "0.33.3", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
+glam = "0.31.1"
+bytemuck = "1"

@@ -8,6 +8,10 @@ pub struct FrameSet<'a> {
 }
 
 impl<'a> FrameSet<'a> {
+    pub(crate) fn ptr(&self) -> *mut sys::ob_frame {
+        self.handle.ptr()
+    }
+
     pub(crate) unsafe fn from_raw(pointer: *mut sys::ob_frame) -> Result<Self> {
         // SAFETY: Pipeline::wait transfers a newly owned frameset reference.
         let handle = unsafe { Handle::new(pointer, sys::ob_delete_frame)? };

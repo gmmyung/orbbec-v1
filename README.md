@@ -42,6 +42,8 @@ scripts/viewer.sh
 # Optional: start in another view or select a specific camera.
 scripts/viewer.sh --view rgb
 scripts/viewer.sh --serial YOUR_SERIAL
+# Open the interactive 3D point cloud directly:
+scripts/viewer.sh --view cloud
 ```
 
 The viewer starts capture automatically. Switch between **Depth**, **RGB**, and
@@ -50,6 +52,19 @@ pixels stay black. Hover over depth pixels to read their distance in millimeters
 **Stop** releases the camera; **Start** reconnects it. Closing the window stops
 capture and releases SDK handles. The FPS, center distance, and active profiles
 are shown below the image.
+
+The **Point cloud** tab uses the SDK's calibrated XYZ filter and renders points
+with OpenGL depth testing. Drag to orbit, scroll to zoom, and right-drag or
+Shift-drag to pan. Press **F**, double-click, or use **Fit view** to reframe the
+cloud. **Near/Far** clips depth in meters; **Point size** adjusts dot size and
+**Pixel step** trades density for rendering speed. **Freeze cloud** retains the
+current 3D frame while you inspect it. Points are colored by depth.
+
+XYZ conversion runs on the capture thread only when the point cloud tab is
+selected. No camera field of view is guessed: calibration comes from the active
+pipeline. Zero depth samples are excluded, so a camera aimed too close to an
+object may produce a sparse or empty cloud. Try a scene about 0.5–3 meters away
+and use **Fit view** after moving the camera.
 
 Capture runs on one background thread. The GUI receives owned buffers through
 one replaceable slot so slow painting cannot build up a queue of old frames.
@@ -196,6 +211,37 @@ depth SDK timestamps were observed in different clock domains, including an
 initial zero RGB timestamp. Do not subtract them to infer exposure skew.
 `system_timestamp_us()` exposes the SDK's host reception timestamp separately;
 host reception timing is not proof of synchronized exposures.
+
+## Calibrated XYZ in your application
+
+The safe wrapper exposes `PointCloudFilter` and owned `PointCloud` buffers:
+
+```rust
+use orbbec_v1::{Pipeline, PointCloudFilter, Result};
+
+// Call after starting/configuring the pipeline.
+fn capture_cloud(pipeline: &Pipeline) -> Result<()> {
+    let mut filter = PointCloudFilter::new(pipeline)?;
+    if let Some(frames) = pipeline.wait(std::time::Duration::from_secs(1))? {
+        if let Some(cloud) = filter.process(&frames)? {
+            // One XYZ triplet per depth pixel, in meters. Invalid points are zero.
+            // Camera coordinates: X right, Y down, Z forward.
+            let points: Vec<[f32; 3]> = cloud.points;
+            println!("{} × {} points, {} valid", cloud.width, cloud.height,
+                points.iter().filter(|p| p[2] > 0.0).count());
+        }
+    }
+    Ok(())
+} // Filter is dropped here; the caller can now stop/reconfigure the pipeline.
+```
+
+`PointCloud` contains owned Rust data and is `Send + Sync`; the filter remains on
+its capture thread. The viewer rotates camera axes to Y-up/-Z-forward for its
+OpenGL display, while library output stays in the SDK's camera frame.
+
+SDK v1.10.37 declares `ob_pointcloud_filter_set_coordinate_system` in its C header
+but does not export that C symbol from its Linux library. The safe wrapper uses
+the native filter's default camera axes and performs display transforms in Rust.
 
 The SDK emits OpenNI capability warnings and USB cancellation warnings during
 shutdown on this PC even after successful capture and stop. See validation notes.

@@ -99,3 +99,43 @@ passed for all workspace targets with warnings denied.
 against the ARM64 SDK. A physical ARM64 desktop has not been tested. Logs for the
 viewer build, Clippy, unit tests, worker hardware test, and ARM64 build are kept
 under `target/validation/viewer-*.log`.
+
+## Point cloud visualization
+
+Added a safe `PointCloudFilter` using the SDK's native XYZ filter and active
+pipeline calibration. On the connected Stereo S U3, calibrated depth intrinsics
+were fx=fy=477.41806, cx=316.40866, cy=198.3181 at 640×400. The hardware test
+received 31,771 valid points in one startup frame, checked X/Y axis signs against
+pixel positions, and confirmed Z agrees with the depth samples in meters within
+2 mm numerical tolerance. This checks conversion and units, not physical depth
+accuracy against an independently measured scene.
+
+The library returns owned, organized XYZ buffers in meters, X right/Y down/Z
+forward. The renderer rotates Y/Z for OpenGL's Y-up/-Z-forward view. Only valid
+points in the selected Near/Far range are uploaded. GPU depth testing handles
+occlusion. Orbit, pan, zoom, fit, freeze, point size, and pixel sampling density
+controls are available in the Point cloud tab. XYZ conversion runs only while
+that tab is selected. Frozen clouds retain their own immutable owned frame.
+
+The native window smoke test rendered the live cloud and saved
+`target/validation/viewer-point-cloud.png`. The screenshot was inspected. Capture
+was about 30 FPS; the then-current close-up desk scene yielded mostly invalid
+depth and only a small number of points in the default 0.3–4 m display range.
+A separate depth-only capture confirmed this scene behavior without the point
+cloud filter: its last frame had zero valid depth samples. The RGB reference
+window (`point-cloud-rgb-reference.png`) showed that the camera had been moved
+from the earlier ceiling view to the nearby desk. No synthetic points are
+substituted for missing depth.
+
+The SDK v1.10.37 C header declares
+`ob_pointcloud_filter_set_coordinate_system`, but its x64 Linux library does not
+export it. The wrapper uses the filter's default axes; display transforms happen
+in Rust. This avoids linking against the unavailable setter.
+
+Unit tests cover XYZ byte decoding, scale, invalid values, range clipping,
+coordinate rotation, orbit projection, and zoom limits. Compile-time checks
+ensure `PointCloud` is Send+Sync and the SDK filter stays confined to its capture
+thread. A documentation test verifies a live filter prevents stopping its
+pipeline. Workspace tests and Clippy pass. The ARM64 viewer builds and links;
+physical ARM64 capture remains untested. Logs are in
+`target/validation/point-cloud-*.log` and `viewer-point-cloud.log`.

@@ -1,5 +1,71 @@
-use orbbec_v1::{Context, Pipeline, Sensor};
+use orbbec_v1::{Context, Pipeline, PointCloudFilter, Sensor};
 use std::time::Duration;
+
+#[test]
+#[ignore = "requires exclusive access to one connected legacy Orbbec camera"]
+fn calibrated_point_cloud_matches_depth_in_meters() -> Result<(), Box<dyn std::error::Error>> {
+    let context = Context::new()?;
+    let devices = context.devices()?;
+    let device = context.open(devices.first().ok_or("No camera")?)?;
+    let mut pipeline = Pipeline::new(&device)?;
+    assert!(PointCloudFilter::new(&pipeline).is_err());
+    let profiles = pipeline.profiles(Sensor::Depth)?;
+    pipeline.start(&[profiles[0]])?;
+    {
+        let mut filter = PointCloudFilter::new(&pipeline)?;
+        let intrinsics = filter.intrinsics();
+        eprintln!("Point cloud intrinsics: {intrinsics:?}");
+        let mut checked = false;
+        for _ in 0..30 {
+            let Some(frames) = pipeline.wait(Duration::from_secs(1))? else {
+                continue;
+            };
+            let Some(depth) = frames.depth()? else {
+                continue;
+            };
+            let Some(cloud) = filter.process(&frames)? else {
+                continue;
+            };
+            let samples: Vec<_> = depth.samples()?.collect();
+            assert_eq!(cloud.width, depth.video().width()?);
+            assert_eq!(cloud.height, depth.video().height()?);
+            assert_eq!(cloud.points.len(), samples.len());
+            let valid = cloud.points.iter().filter(|p| p[2] > 0.0).count();
+            assert!(
+                valid > 100,
+                "Reference scene should produce many valid points"
+            );
+            for (i, (point, raw)) in cloud.points.iter().zip(samples).enumerate().step_by(97) {
+                if point[2] > 0.0 && raw > 0 {
+                    assert!((point[2] - f32::from(raw) * depth.scale_mm()? / 1000.0).abs() < 0.002);
+                    let x = (i % cloud.width as usize) as f32;
+                    let y = (i / cloud.width as usize) as f32;
+                    if x < intrinsics.cx - 20.0 {
+                        assert!(point[0] <= 0.0);
+                    }
+                    if x > intrinsics.cx + 20.0 {
+                        assert!(point[0] >= 0.0);
+                    }
+                    if y < intrinsics.cy - 20.0 {
+                        assert!(point[1] <= 0.0);
+                    }
+                    if y > intrinsics.cy + 20.0 {
+                        assert!(point[1] >= 0.0);
+                    }
+                }
+            }
+            eprintln!(
+                "Point cloud: {}x{}, {valid} valid points",
+                cloud.width, cloud.height
+            );
+            checked = true;
+            break;
+        }
+        assert!(checked, "No calibrated point cloud received");
+    }
+    pipeline.stop()?;
+    Ok(())
+}
 
 /// Serial execution only: one physical device cannot be opened by parallel tests.
 #[test]

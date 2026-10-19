@@ -7,11 +7,13 @@ mod error;
 mod frame;
 mod handle;
 mod pipeline;
+mod point_cloud;
 
 pub use device::{Context, Device, DeviceDescriptor, DeviceInfo};
 pub use error::{Error, Result};
 pub use frame::{DepthFrame, FrameSet, VideoFrame};
 pub use pipeline::{Format, Pipeline, Sensor, VideoProfile};
+pub use point_cloud::{CameraIntrinsics, PointCloud, PointCloudFilter};
 
 use orbbec_v1_sys as sys;
 
@@ -43,13 +45,15 @@ pub fn sdk_version() -> SdkVersion {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use static_assertions::assert_not_impl_any;
+    use static_assertions::{assert_impl_all, assert_not_impl_any};
+    assert_impl_all!(PointCloud: Send, Sync);
     assert_not_impl_any!(Context: Send, Sync);
     assert_not_impl_any!(Device: Send, Sync);
     assert_not_impl_any!(Pipeline: Send, Sync);
     assert_not_impl_any!(FrameSet<'static>: Send, Sync);
     assert_not_impl_any!(VideoFrame<'static>: Send, Sync);
     assert_not_impl_any!(DepthFrame<'static>: Send, Sync);
+    assert_not_impl_any!(PointCloudFilter<'static>: Send, Sync);
 
     #[test]
     fn loaded_sdk_is_the_pinned_version() {

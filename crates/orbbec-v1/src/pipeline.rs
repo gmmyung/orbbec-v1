@@ -141,6 +141,10 @@ impl Pipeline {
         self.handle.ptr()
     }
 
+    pub(crate) fn is_streaming(&self) -> bool {
+        self.streaming
+    }
+
     pub fn profiles(&self, sensor: Sensor) -> Result<Vec<VideoProfile>> {
         let list = owned!(
             ffi!(

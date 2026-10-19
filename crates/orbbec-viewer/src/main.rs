@@ -1,8 +1,10 @@
 mod camera;
+mod point_cloud;
 mod render;
 
 use camera::{CameraState, Capture, Worker};
 use eframe::egui::{self, Color32, TextureHandle, TextureOptions, Vec2};
+use point_cloud::CloudView;
 use std::{
     path::PathBuf,
     sync::{
@@ -17,6 +19,7 @@ enum View {
     Depth,
     Color,
     Infrared,
+    PointCloud,
 }
 
 struct Viewer {
@@ -25,6 +28,8 @@ struct Viewer {
     serial: Option<String>,
     capture: Option<Capture>,
     texture: Option<TextureHandle>,
+    cloud: Option<CloudView>,
+    cloud_error: Option<String>,
     view: View,
     near_m: f32,
     far_m: f32,
@@ -52,7 +57,20 @@ impl Viewer {
             style.visuals.selection.bg_fill = Color32::from_rgb(26, 106, 100);
             style.visuals.panel_fill = Color32::from_rgb(23, 27, 32);
         });
-        let state = Arc::new(Mutex::new(CameraState::default()));
+        let (cloud, cloud_error) = match cc.gl.as_ref() {
+            Some(gl) => match CloudView::new(gl) {
+                Ok(cloud) => (Some(cloud), None),
+                Err(error) => (
+                    None,
+                    Some(format!("Cannot initialize 3D renderer: {error}")),
+                ),
+            },
+            None => (None, Some("Point cloud requires an OpenGL renderer".into())),
+        };
+        let state = Arc::new(Mutex::new(CameraState {
+            want_point_cloud: view == View::PointCloud,
+            ..Default::default()
+        }));
         let worker = Worker::spawn(cc.egui_ctx.clone(), state.clone(), serial.clone());
         Self {
             state,
@@ -60,6 +78,8 @@ impl Viewer {
             serial,
             capture: None,
             texture: None,
+            cloud,
+            cloud_error,
             view,
             near_m: 0.3,
             far_m: 4.0,
@@ -80,6 +100,9 @@ impl Viewer {
         self.device.clone_from(&state.device);
         self.streams.clone_from(&state.streams);
         self.error = state.error;
+        if state.cloud_error.is_some() {
+            self.cloud_error.clone_from(&state.cloud_error);
+        }
         let capture = state.latest.take();
         drop(state);
         if let Some(capture) = capture {
@@ -105,6 +128,7 @@ impl Viewer {
                 .as_ref()
                 .map(|plane| egui::ColorImage::from_rgb(plane.size, &plane.pixels)),
             View::Infrared => capture.infrared.as_ref().map(render::infrared_image),
+            View::PointCloud => None,
         };
         if let Some(image) = image {
             if let Some(texture) = &mut self.texture {
@@ -144,6 +168,10 @@ impl Viewer {
                         *self.state.lock().unwrap() = CameraState::default();
                         self.capture = None;
                         self.texture = None;
+                        if let Some(cloud) = &mut self.cloud {
+                            cloud.reset();
+                            self.cloud_error = None;
+                        }
                         self.worker = Some(Worker::spawn(
                             ctx.clone(),
                             self.state.clone(),
@@ -181,6 +209,10 @@ impl Viewer {
                     changed = true;
                 }
                 ui.separator();
+                changed |= ui
+                    .selectable_value(&mut self.view, View::PointCloud, "Point cloud")
+                    .changed();
+                ui.separator();
                 let color = if self.error {
                     Color32::from_rgb(255, 120, 110)
                 } else {
@@ -188,7 +220,7 @@ impl Viewer {
                 };
                 ui.colored_label(color, &self.message);
             });
-            if self.view == View::Depth {
+            if matches!(self.view, View::Depth | View::PointCloud) {
                 ui.horizontal_wrapped(|ui| {
                     ui.label("Near");
                     changed |= ui
@@ -211,12 +243,17 @@ impl Viewer {
                     );
                 });
             }
+            if self.view == View::PointCloud
+                && let Some(cloud) = &mut self.cloud
+            {
+                ui.horizontal_wrapped(|ui| cloud.controls(ui));
+            }
             ui.add_space(4.0);
         });
         changed
     }
 
-    fn preview(&self, ctx: &egui::Context) {
+    fn preview(&mut self, ctx: &egui::Context, new_frame: bool, controls_changed: bool) {
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::new()
@@ -224,7 +261,26 @@ impl Viewer {
                     .inner_margin(12.0),
             )
             .show(ctx, |ui| {
-                if let Some(texture) = &self.texture {
+                if self.view == View::PointCloud {
+                    if let Some(error) = &self.cloud_error {
+                        ui.centered_and_justified(|ui| {
+                            ui.colored_label(Color32::LIGHT_RED, error);
+                        });
+                    } else if let Some(cloud) = &mut self.cloud {
+                        let points = self
+                            .capture
+                            .as_ref()
+                            .and_then(|capture| capture.point_cloud.as_ref());
+                        cloud.show(
+                            ui,
+                            points,
+                            new_frame,
+                            self.near_m,
+                            self.far_m,
+                            controls_changed,
+                        );
+                    }
+                } else if let Some(texture) = &self.texture {
                     let source = texture.size_vec2();
                     let available = ui.available_size();
                     let size = source
@@ -325,8 +381,15 @@ impl Viewer {
             }
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
+        let preview_ready = if self.view == View::PointCloud {
+            self.cloud
+                .as_ref()
+                .is_some_and(|cloud| cloud.visible_points > 0)
+        } else {
+            self.texture.is_some()
+        };
         if !self.smoke_requested
-            && self.texture.is_some()
+            && preview_ready
             && self.capture.as_ref().is_some_and(|c| c.count >= 30)
         {
             self.smoke_requested = true;
@@ -346,6 +409,8 @@ impl eframe::App for Viewer {
             self.worker = None;
         }
         let changed = self.toolbar(ctx);
+        self.state.lock().unwrap().want_point_cloud =
+            self.view == View::PointCloud && self.cloud.is_some();
         if new_capture || changed {
             self.update_texture(ctx);
         }
@@ -372,9 +437,18 @@ impl eframe::App for Viewer {
                 ui.small(&self.streams);
             }
         });
-        self.preview(ctx);
+        self.preview(ctx, new_capture, changed);
         self.smoke_test(ctx);
         ctx.request_repaint_after(Duration::from_millis(100));
+    }
+
+    fn on_exit(&mut self, gl: Option<&eframe::glow::Context>) {
+        if let Some(worker) = &self.worker {
+            worker.stop();
+        }
+        if let (Some(cloud), Some(gl)) = (&self.cloud, gl) {
+            cloud.destroy(gl);
+        }
     }
 }
 
@@ -390,7 +464,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some("depth") => View::Depth,
                     Some("rgb") => View::Color,
                     Some("ir") => View::Infrared,
-                    _ => return Err("--view must be depth, rgb, or ir".into()),
+                    Some("cloud") => View::PointCloud,
+                    _ => return Err("--view must be depth, rgb, ir, or cloud".into()),
                 }
             }
             "--serial" => serial = Some(args.next().ok_or("--serial requires a camera serial")?),
@@ -402,7 +477,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "--help" | "-h" => {
                 println!(
-                    "orbbec-viewer [--serial SERIAL] [--view depth|rgb|ir] [--smoke-test FILE.png]"
+                    "orbbec-viewer [--serial SERIAL] [--view depth|rgb|ir|cloud] [--smoke-test FILE.png]"
                 );
                 return Ok(());
             }
@@ -419,6 +494,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .with_inner_size([1100.0, 800.0])
                 .with_min_inner_size([720.0, 500.0]),
             renderer: eframe::Renderer::Glow,
+            depth_buffer: 24,
             ..Default::default()
         },
         Box::new(move |cc| {
