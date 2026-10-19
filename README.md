@@ -1,4 +1,4 @@
-# orbbec-v1-rs
+# orbbec-v1
 
 Rust bindings for **Orbbec SDK v1.10.37**, initially developed with an **Astra
 Stereo S U3** (`SV1301S_U3`, firmware `RD3013`). Targets are Linux GNU x86_64 and
@@ -7,7 +7,7 @@ in [docs/validation.md](docs/validation.md).
 
 The workspace contains architecture-specific binary packages, `orbbec-v1-sys`
 (pregenerated C FFI) and `orbbec-v1` (a safe,
-synchronous wrapper), plus `orbbec-viewer` (a native egui viewer). The safe API covers enumeration, selection by USB UID or
+synchronous wrapper), plus `orbbec-v1-viewer` (a native egui viewer). The safe API covers enumeration, selection by USB UID or
 serial, explicit video profiles, depth/RGB/IR capture, frame bytes, timestamps,
 depth scale, and checked depth samples. SDK objects release their native
 references on Drop. Device and context parents stay alive with their children.
@@ -168,7 +168,7 @@ scripts/build-arm64.sh --viewer
 ```
 
 This produces `target/aarch64-unknown-linux-gnu/debug/examples/{enumerate,capture}`.
-The `--viewer` option produces `target/aarch64-unknown-linux-gnu/debug/orbbec-viewer`.
+The `--viewer` option produces `target/aarch64-unknown-linux-gnu/debug/orbbec-v1-viewer`.
 `ORBBEC_V1_SYSROOT` can select a different target C sysroot for maintainer binding
 regeneration; normal Cargo builds use pregenerated bindings. The cross build script
 also supports the user-local Ubuntu toolchain extracted into `.tools/` on this
@@ -192,7 +192,7 @@ scripts/with-sdk.sh cargo fmt --all -- --check
 scripts/with-sdk.sh cargo test -p orbbec-v1 --test hardware -- \
   --ignored --test-threads=1
 # Viewer worker capture/stop/reopen on the reference camera:
-scripts/with-sdk.sh cargo test -p orbbec-viewer -- --ignored --test-threads=1
+scripts/with-sdk.sh cargo test -p orbbec-v1-viewer -- --ignored --test-threads=1
 # Open the viewer, capture 30 frames, save its window, then exit:
 scripts/viewer.sh --smoke-test target/validation/viewer-depth.png
 ```
@@ -258,3 +258,10 @@ The SDK emits OpenNI capability warnings and USB cancellation warnings during
 shutdown on this PC even after successful capture and stop. See validation notes.
 
 SDK license and redistribution details: [NOTICE.md](NOTICE.md).
+
+## Publishing
+
+The manual [GitHub publish workflow](.github/workflows/publish.yml) verifies by
+default and uploads only when explicitly requested. All packages use the
+`orbbec-v1` prefix. See [publishing setup](docs/publishing.md) for the first-release
+secret and subsequent trusted publishing configuration.

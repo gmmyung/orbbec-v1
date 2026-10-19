@@ -49,7 +49,7 @@ def main():
                 for name, expected_hash in provenance["sha256"].items():
                     actual = hashlib.sha256((unpacked / name).read_bytes()).hexdigest()
                     assert actual == expected_hash, f"Payload checksum mismatch: {name}"
-        members = sorted(p.parent for p in scratch.glob("*/Cargo.toml") if not p.parent.name.startswith("orbbec-viewer-"))
+        members = sorted(p.parent for p in scratch.glob("*/Cargo.toml") if not p.parent.name.startswith("orbbec-v1-viewer-"))
         manifest = '[workspace]\nresolver = "2"\nmembers = ' + json.dumps([p.name for p in members]) + '\n\n[patch.crates-io]\n'
         for p in members:
             name = p.name.rsplit("-", 1)[0]

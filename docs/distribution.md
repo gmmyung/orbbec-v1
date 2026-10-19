@@ -8,7 +8,7 @@
 | orbbec-v1-bin-aarch64 | 1.10.37 | Original AArch64 SDK libraries, config, notices, upstream sources |
 | orbbec-v1-sys | 0.1.0 | Pregenerated target C bindings and SDK staging/linking |
 | orbbec-v1 | 0.1.0 | Safe synchronous API and examples |
-| orbbec-viewer | 0.1.0 | Native egui viewer |
+| orbbec-v1-viewer | 0.1.0 | Native egui viewer |
 
 The sys crate selects its binary dependency with Cargo target triples, pins
 version `=1.10.37`, and copies the libraries into its own OUT_DIR. ELF machine
@@ -79,7 +79,7 @@ python3 scripts/package-viewer.py
 python3 scripts/package-viewer.py --release
 ```
 
-The output is `target/dist/orbbec-viewer-ARCH/`, containing the executable and
+The output is `target/dist/orbbec-v1-viewer-ARCH/`, containing the executable and
 `orbbec-sdk/{lib,config,sources,licenses}` plus original license, provenance, and
 third-party notes. The executable has an `$ORIGIN/orbbec-sdk/lib` RPATH, so this
 layout can be moved without setting `LD_LIBRARY_PATH`. This does not embed the
@@ -123,7 +123,8 @@ public release requirements are resolved, publish in this order:
 1. Both `orbbec-v1-bin-*` crates.
 2. `orbbec-v1-sys`.
 3. `orbbec-v1`.
-4. `orbbec-viewer`, if desired.
+4. `orbbec-v1-viewer`, if desired.
 
-Set project repository/documentation URLs when a public repository exists; none
-is invented for the local repository.
+Repository metadata points to https://github.com/gmmyung/orbbec-v1. The manual
+GitHub workflow and first-publication/trusted-publishing setup are documented in
+[publishing.md](publishing.md).

@@ -1,5 +1,5 @@
 [package]
-name = "generate-orbbec-bindings"
+name = "orbbec-v1-bindgen"
 version = "0.0.0"
 edition = "2024"
 publish = false

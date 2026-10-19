@@ -5,7 +5,7 @@ fn main() {
     assert_eq!(
         args.len(),
         3,
-        "Usage: generate-orbbec-bindings TARGET SDK_DIR OUTPUT.rs"
+        "Usage: orbbec-v1-bindgen TARGET SDK_DIR OUTPUT.rs"
     );
     let target = args[0].to_str().unwrap();
     assert!(matches!(

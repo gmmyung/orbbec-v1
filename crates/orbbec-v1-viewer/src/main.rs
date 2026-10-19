@@ -477,7 +477,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "--help" | "-h" => {
                 println!(
-                    "orbbec-viewer [--serial SERIAL] [--view depth|rgb|ir|cloud] [--smoke-test FILE.png]"
+                    "orbbec-v1-viewer [--serial SERIAL] [--view depth|rgb|ir|cloud] [--smoke-test FILE.png]"
                 );
                 return Ok(());
             }

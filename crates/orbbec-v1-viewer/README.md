@@ -1,4 +1,4 @@
-# orbbec-viewer
+# orbbec-v1-viewer
 
 Native egui viewer for legacy Orbbec cameras using SDK 1.10.37. Supports Linux GNU
 x86_64 and AArch64 and requires Rust 1.88+ plus an OpenGL Wayland or X11 desktop.
@@ -6,7 +6,7 @@ x86_64 and AArch64 and requires Rust 1.88+ plus an OpenGL Wayland or X11 desktop
 From the workspace:
 
 ```bash
-cargo run -p orbbec-viewer -- --view cloud
+cargo run -p orbbec-v1-viewer -- --view cloud
 ```
 
 Views: `depth`, `rgb`, `ir`, and `cloud`. Select a camera with `--serial SERIAL`.
@@ -22,4 +22,4 @@ Copy accompanying notices and source materials when preparing a distribution.
 The repository's `scripts/package-viewer.py` prepares that layout.
 
 Rust code is MIT licensed; the bundled SDK retains its separate original terms.
-This application has not been published to crates.io.
+Releases use the repository's manual GitHub Actions publishing workflow.

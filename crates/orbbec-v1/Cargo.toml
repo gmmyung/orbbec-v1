@@ -6,6 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 readme = "README.md"
+repository.workspace = true
 keywords = ["orbbec", "camera", "depth", "point-cloud"]
 categories = ["hardware-support", "api-bindings"]
 include = ["src/**", "examples/**", "tests/**", "README.md", "LICENSE"]

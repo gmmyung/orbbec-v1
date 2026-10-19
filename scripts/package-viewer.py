@@ -22,17 +22,17 @@ def main():
         parser.error("Unset ORBBEC_V1_SDK_DIR: this packager copies notices for the bundled SDK only")
     cargo = shutil.which("cargo") or str(Path.home() / ".cargo/bin/cargo")
     profile = ["--release"] if args.release else []
-    subprocess.run([cargo, "build", "-p", "orbbec-viewer", *profile], cwd=ROOT, check=True)
+    subprocess.run([cargo, "build", "-p", "orbbec-v1-viewer", *profile], cwd=ROOT, check=True)
     sdk = Path(subprocess.check_output(
         [cargo, "run", "--quiet", "-p", "orbbec-v1", "--example", "sdk_path", *profile],
         cwd=ROOT, text=True,
     ).strip())
     metadata = json.loads(subprocess.check_output([cargo, "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
     target = Path(metadata["target_directory"])
-    bundle = target / "dist" / f"orbbec-viewer-{arch}"
+    bundle = target / "dist" / f"orbbec-v1-viewer-{arch}"
     bundle.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(target / ("release" if args.release else "debug") / "orbbec-viewer", bundle / "orbbec-viewer")
-    (bundle / "orbbec-viewer").chmod(0o755)
+    shutil.copyfile(target / ("release" if args.release else "debug") / "orbbec-v1-viewer", bundle / "orbbec-v1-viewer")
+    (bundle / "orbbec-v1-viewer").chmod(0o755)
     shutil.copytree(sdk, bundle / "orbbec-sdk", dirs_exist_ok=True)
     native = ROOT / "crates" / f"orbbec-v1-bin-{arch}"
     for name in ["LICENSE.txt", "THIRD_PARTY.md", "provenance.json"]:

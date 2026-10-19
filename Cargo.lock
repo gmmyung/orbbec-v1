@@ -1599,7 +1599,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "orbbec-viewer"
+name = "orbbec-v1-viewer"
 version = "0.1.0"
 dependencies = [
  "bytemuck",

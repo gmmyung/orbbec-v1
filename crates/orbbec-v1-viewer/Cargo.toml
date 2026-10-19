@@ -1,11 +1,12 @@
 [package]
-name = "orbbec-viewer"
+name = "orbbec-v1-viewer"
 description = "Simple egui depth, RGB, and infrared viewer for Orbbec SDK v1"
 version.workspace = true
 edition.workspace = true
 rust-version = "1.88"
 license.workspace = true
 readme = "README.md"
+repository.workspace = true
 include = ["src/**", "build.rs", "README.md", "LICENSE"]
 
 [dependencies]

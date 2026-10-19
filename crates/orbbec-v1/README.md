@@ -54,4 +54,4 @@ The Rust wrapper is MIT licensed. SDK binaries have separate Orbbec and
 third-party terms; they are not relicensed as MIT. The binary dependency records
 source provenance and remaining vendor-source verification for public releases.
 
-Version 0.1.0 is currently prepared locally; it has not been published to crates.io.
+Release automation and setup: https://github.com/gmmyung/orbbec-v1/blob/main/docs/publishing.md

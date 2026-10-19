@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "Precompiled Orbbec SDK v1.10.37 libraries for Linux GNU x86_64"
 license-file = "LICENSE.txt"
 readme = "README.md"
+repository.workspace = true
 links = "orbbec_v1_bin_x86_64"
 include = ["src/**", "build.rs", "sdk/**", "sources/**", "licenses/**", "LICENSE.txt", "README.md", "THIRD_PARTY.md", "provenance.json"]
 categories = ["external-ffi-bindings", "hardware-support"]
