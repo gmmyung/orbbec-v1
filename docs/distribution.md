@@ -91,8 +91,11 @@ their application distribution and configure their own executable loader path.
 `cargo run -p orbbec-v1 --example sdk_path` prints the build's selected SDK staging
 directory. Include the matching binary crate's notices and applicable source
 materials when distributing an application. A build-time Cargo path is not a
-portable installation location. ARM64 deployment needs ARM64 libraries and still
-requires runtime validation on the target board.
+portable installation location. ARM64 deployment needs ARM64 libraries and a
+compatible system runtime. Hardware and GPU rendering have been validated on
+the [Ubuntu 24.04 Jetson AGX Orin](jetson-validation.md). Other boards and releases
+still need their own runtime validation. `cargo install` by itself does not copy
+the shared libraries into the viewer's standalone bundle layout.
 
 ## License and source status
 

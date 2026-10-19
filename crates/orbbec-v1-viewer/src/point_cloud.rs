@@ -399,6 +399,10 @@ void main() {
 "#;
 
 #[cfg(test)]
+#[path = "point_cloud/hardware_test.rs"]
+mod hardware_test;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     #[test]

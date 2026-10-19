@@ -66,7 +66,9 @@ jobs:
       - name: Verify package contents and isolated consumer
         run: python3 scripts/check-distribution.py
       - name: Build the ARM64 viewer
-        run: scripts/build-arm64.sh --viewer --locked
+        run: |
+          scripts/build-arm64.sh --viewer --locked
+          python3 scripts/check-glibc.py target/aarch64-unknown-linux-gnu/debug/orbbec-v1-viewer --max-version 2.39
       - name: Prepare the release plan without publishing
         run: python3 scripts/publish-crates.py --version "$RELEASE_VERSION" --prepared
       - name: Save packages and verification reports
@@ -80,8 +82,40 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  native-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libx11-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev libgl1-mesa-dev
+      - name: Install the tested Rust toolchain
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+      - name: Run ARM64 tests and SDK enumeration
+        run: |
+          cargo test --workspace --locked
+          cargo run -p orbbec-v1 --example enumerate --locked
+      - name: Package a native Ubuntu 24.04 viewer
+        run: |
+          python3 scripts/package-viewer.py
+          python3 scripts/check-glibc.py target/dist/orbbec-v1-viewer-aarch64/orbbec-v1-viewer --max-version 2.39
+          tar -C target/dist -czf target/orbbec-v1-viewer-aarch64-ubuntu24.04.tar.gz orbbec-v1-viewer-aarch64
+      - name: Save the ARM64 viewer bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: orbbec-v1-viewer-aarch64-ubuntu24.04-${{ github.sha }}
+          path: target/orbbec-v1-viewer-aarch64-ubuntu24.04.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
   publish:
-    needs: verify
+    needs: [verify, native-arm64]
     if: ${{ inputs.publish }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40

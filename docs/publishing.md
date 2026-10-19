@@ -18,7 +18,8 @@ Actions → **Publish orbbec-v1** → **Run workflow** on the default branch.
 
 - `version`: must equal the API crate's current Cargo version; it does not bump versions.
 - `publish=false` (default): tests, lint, isolated package verification, ARM64
-  viewer linking, and a registry-aware release plan. No credentials needed.
+  cross linking, native ARM64 tests and an Ubuntu 24.04 viewer bundle, glibc
+  compatibility checks, and a registry-aware release plan. No credentials needed.
 - `publish=true`: the same verification followed by sequential publication.
 - `authentication=token`: initial publication, using the Actions secret.
 - `authentication=trusted`: subsequent releases, using GitHub OIDC.
@@ -34,6 +35,8 @@ The publisher job uses the `crates-io` GitHub environment. Runs are serialized;
 verification and publishing check out the same commit. No push, pull request,
 or tag automatically uploads packages. Workflow actions are pinned to commits.
 Artifacts contain the crate files, isolated test report, and release plan.
+The separate ARM64 artifact contains the complete native Ubuntu 24.04 viewer
+bundle. Publication waits for both x86_64 verification and native ARM64 checks.
 Verification also checks repository files and reachable Git history for crates.io
 token patterns, reporting locations without printing matching values. No token
 value belongs in this repository or in workflow dispatch inputs.

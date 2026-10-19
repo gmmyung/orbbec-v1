@@ -154,8 +154,9 @@ and v2 libraries in the same application process.
 ## ARM64
 
 For native development on ARM64, use the same setup and run commands. Cargo
-selects the ARM64 binary dependency automatically. Actual camera capture on ARM64 still
-needs validation on the target board.
+selects the ARM64 binary dependency automatically. Depth/RGB/IR capture, calibrated
+point clouds, and the actual NVIDIA GPU point renderer have been validated on a
+Jetson AGX Orin running Ubuntu 24.04. See [Jetson results](docs/jetson-validation.md).
 
 For cross compilation from x86_64 Ubuntu:
 
@@ -175,6 +176,18 @@ also supports the user-local Ubuntu toolchain extracted into `.tools/` on this
 PC. Build against a sysroot compatible with the oldest glibc version you deploy
 to; a successful cross build does not establish runtime compatibility with every
 Jetson or other ARM64 distribution.
+
+Check a candidate executable against the target's glibc before copying it:
+
+```bash
+python3 scripts/check-glibc.py \
+  target/aarch64-unknown-linux-gnu/debug/orbbec-v1-viewer --max-version 2.39
+```
+
+The viewer cross-linked on this Ubuntu 26.04 desktop requires glibc 2.43 and
+cannot run on the validated Ubuntu 24.04 Orin (glibc 2.39). Building natively on
+that Orin produces a compatible bundle. Release verification also builds a native
+ARM64 Ubuntu 24.04 bundle and enforces the 2.39 ceiling.
 
 Deploy the target binary with the **ARM64** SDK's staged `lib/` contents and
 retain its configuration, license, provenance, and applicable source materials. Set

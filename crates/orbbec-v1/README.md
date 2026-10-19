@@ -2,7 +2,8 @@
 
 Safe, synchronous Rust capture for legacy Orbbec cameras using **SDK 1.10.37**.
 Developed with the Astra Stereo S U3 (`SV1301S_U3`). Supports Linux GNU x86_64 and
-AArch64; actual camera capture has been validated on x86_64.
+AArch64; actual camera capture and calibrated XYZ conversion have been validated
+on x86_64 and a Jetson AGX Orin running Ubuntu 24.04.
 
 ```toml
 [dependencies]

@@ -179,3 +179,16 @@ No packages were uploaded. The upstream live555 version/license discrepancy and
 unverified correspondence of upstream snapshots to Orbbec's private builds are
 recorded in `docs/distribution.md` and each binary crate's `THIRD_PARTY.md` and
 `provenance.json`. Included snapshots are not a declaration of full LGPL compliance.
+
+## Jetson hardware and GPU validation (2026-10-19)
+
+Native AArch64 capture, calibrated XYZ conversion, and the actual NVIDIA Tegra
+Orin GPU point renderer have now been validated on a Jetson AGX Orin Developer
+Kit with Ubuntu 24.04, glibc 2.39, and the reference Astra Stereo S U3. All native
+workspace, camera recovery, serial-selected IR capture, and viewer worker tests
+passed. A new ignored EGL test rendered 57,742 real calibrated points on NVIDIA
+hardware without a desktop login. A native viewer bundle loaded successfully.
+See [the complete test record](jetson-validation.md), including the desktop cross
+build's incompatible glibc 2.43 requirement, native build results, and remaining
+desktop-interaction boundary. Native ARM64 CI and a glibc compatibility gate were
+added to the manual release workflow.
