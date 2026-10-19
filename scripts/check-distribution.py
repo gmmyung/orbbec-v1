@@ -59,8 +59,11 @@ def main():
             manifest += f'{name} = {{ path = "{p.name}" }}\n'
         (scratch / "Cargo.toml").write_text(manifest)
         shutil.copyfile(ROOT / "Cargo.lock", scratch / "Cargo.lock")
-        # Reuse cached third-party dependencies, but none of the checkout's code or SDK.
+        # A dedicated publish runner may have an empty Cargo cache. Fetch only
+        # normal registry dependencies before enforcing offline archive tests;
+        # none of the checkout's code or SDK is used by the unpacked workspace.
         env["CARGO_TARGET_DIR"] = str(target / "distribution-check")
+        subprocess.run([cargo, "fetch", "--locked", "--target", "x86_64-unknown-linux-gnu", "--target", "aarch64-unknown-linux-gnu"], cwd=scratch, env=env, check=True)
         subprocess.run([cargo, "test", "--workspace", "--locked", "--offline"], cwd=scratch, env=env, check=True)
         for triple, selected, excluded in [
             ("x86_64-unknown-linux-gnu", "orbbec-v1-bin-x86_64", "orbbec-v1-bin-aarch64"),

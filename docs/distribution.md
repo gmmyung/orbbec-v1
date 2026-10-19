@@ -65,7 +65,9 @@ The distribution check uses Cargo's workspace packaging support (validated with
 Cargo 1.99.1), verifies package size and payload hashes, extracts all normalized
 published manifests into a temporary directory outside the checkout, and tests
 the entire unpacked workspace with the release lockfile and SDK/Clang/loader
-environment overrides removed. It also checks both target dependency trees.
+environment overrides removed. It fetches the locked registry dependencies for
+both supported targets first, so a fresh publish runner needs no existing cache;
+the archive tests then run offline. It also checks both target dependency trees.
 Archive creation uses `--no-verify` because Cargo's temporary registry can reuse
 stale extracted sources when the same unpublished version is rebuilt. The tests
 of the exact unpacked artifacts provide verification instead. No publication takes place.
