@@ -1,0 +1,11 @@
+[package]
+name = "orbbec-v1-sys"
+description = "Raw C bindings for pinned Orbbec SDK v1.10.37 on Linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+links = "OrbbecSDK"
+
+[build-dependencies]
+bindgen = "0.72"

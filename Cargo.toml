@@ -1,0 +1,12 @@
+[workspace]
+members = ["crates/orbbec-v1-sys", "crates/orbbec-v1"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+orbbec-v1-sys = { path = "crates/orbbec-v1-sys", version = "0.1.0" }

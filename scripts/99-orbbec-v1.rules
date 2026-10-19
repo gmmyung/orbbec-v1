@@ -1,0 +1,2 @@
+# Orbbec RGB and depth USB interfaces; members of plugdev may access them.
+SUBSYSTEM=="usb", ATTR{idVendor}=="2bc5", MODE="0660", GROUP="plugdev", TAG+="uaccess"

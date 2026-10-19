@@ -1,0 +1,13 @@
+[package]
+name = "orbbec-v1"
+description = "Small synchronous Rust wrapper for legacy Orbbec cameras using SDK v1"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+orbbec-v1-sys.workspace = true
+
+[dev-dependencies]
+static_assertions = "1"

@@ -1,0 +1,7 @@
+/target/
+/.sdk/
+/.tools/
+/captures/
+Log/
+__pycache__/
+*.pyc

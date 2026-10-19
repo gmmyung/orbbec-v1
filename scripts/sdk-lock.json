@@ -1,0 +1,14 @@
+{
+  "version": "1.10.37",
+  "release": "https://github.com/orbbec/OrbbecSDK/releases/tag/v1.10.37",
+  "assets": {
+    "x64": {
+      "name": "OrbbecSDK_C_C++_v1.10.37_20260707_3f75820_linux_x64_release.zip",
+      "sha256": "0a8921e659ef172a535ec1631379d29c2542ad3afabe2b5592d20be1db0158c8"
+    },
+    "arm64": {
+      "name": "OrbbecSDK_C_C++_v1.10.37_20260707_3f75820_linux_arm64_release.zip",
+      "sha256": "3c269b7eac354dbb69a6d4519cc587b21b6390baaacce7ce79331593c97489a0"
+    }
+  }
+}
