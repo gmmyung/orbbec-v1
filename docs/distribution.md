@@ -102,7 +102,8 @@ the shared libraries into the viewer's standalone bundle layout.
 
 ## License and source status
 
-The project owner elected to proceed with preparing redistribution of the SDK.
+The project owner authorized redistribution and publication of the SDK packages
+with the source and licensing limitations below disclosed.
 The SDK and third-party terms are preserved unchanged; this decision does not
 relicense the native binaries or constitute permission from Orbbec. Rust code
 retains the repository's MIT license. Binary crates use `license-file`, pointing
@@ -118,13 +119,13 @@ libusb binary reports 1.0.26.11791; upstream libusb 1.0.26 source and its LGPL
 The supplied archives are upstream sources for observed component versions,
 not verified corresponding sources for vendor builds. Orbbec-specific patches
 and build configurations have not been established. `source_correspondence_verified`
-therefore remains false. Exact source correspondence and the live555 licensing
-discrepancy must be resolved before claiming full LGPL compliance or publicly
-publishing these binary packages. Other third-party source/notice obligations in
-the complete SDK license also need to be honored for a public distribution.
+therefore remains false. Publication does not establish vendor redistribution
+permission or full LGPL compliance. Exact source correspondence and the live555
+licensing discrepancy remain unresolved; the project owner's authorization does
+not supply missing rights or waive third-party obligations. Other third-party
+source/notice obligations in the complete SDK license also remain applicable.
 
-No packages have been uploaded. The artifacts are local and reviewable. Once
-public release requirements are resolved, publish in this order:
+The release workflow publishes in this order:
 
 1. Both `orbbec-v1-bin-*` crates.
 2. `orbbec-v1-sys`.

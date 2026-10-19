@@ -2,7 +2,7 @@
 
 Rust bindings for **Orbbec SDK v1.10.37**, initially developed with an **Astra
 Stereo S U3** (`SV1301S_U3`, firmware `RD3013`). Targets are Linux GNU x86_64 and
-AArch64. This is a local development repository; hardware results are recorded
+AArch64. Hardware results are recorded
 in [docs/validation.md](docs/validation.md).
 
 The workspace contains architecture-specific binary packages, `orbbec-v1-sys`
@@ -26,7 +26,7 @@ cargo build --workspace
 ```
 
 USB rules give members of `plugdev` access to Orbbec interfaces; reconnect the
-camera if required. This PC already has the rule installed. The egui viewer also
+camera if required. The egui viewer also
 needs a working Wayland or X11 desktop and OpenGL drivers.
 
 `cargo run` and `cargo test` configure the runtime library path automatically.
@@ -110,7 +110,7 @@ The PGM is not a contrast-adjusted preview image.
 
 ```toml
 [dependencies]
-orbbec-v1 = { path = "/home/gmmyung/orbbec-v1-rs/crates/orbbec-v1" }
+orbbec-v1 = "0.1.0"
 ```
 
 ```rust,no_run
@@ -142,8 +142,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 When building from another repository, Cargo obtains the matching SDK from the
 binary crate dependency. `cargo run` and `cargo test` load it automatically.
 For standalone deployment, copy `orbbec_v1::sdk_directory()` and configure the
-runtime loader path. The prepared crates are local and have not been published;
-a registry dependency will become usable after publication.
+runtime loader path. For a complete standalone viewer, use the bundle attached
+to the [GitHub release](https://github.com/gmmyung/orbbec-v1/releases).
 
 For a separately installed SDK, set `ORBBEC_V1_SDK_DIR` to the directory containing
 `lib/` and optionally `config/`. The build checks every runtime library's ELF architecture. The safe
