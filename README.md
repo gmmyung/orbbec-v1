@@ -6,7 +6,7 @@ AArch64. This is a local development repository; hardware results are recorded
 in [docs/validation.md](docs/validation.md).
 
 The workspace contains `orbbec-v1-sys` (generated C FFI) and `orbbec-v1` (a safe,
-synchronous wrapper). The safe API covers enumeration, selection by USB UID or
+synchronous wrapper), plus `orbbec-viewer` (a native egui viewer). The safe API covers enumeration, selection by USB UID or
 serial, explicit video profiles, depth/RGB/IR capture, frame bytes, timestamps,
 depth scale, and checked depth samples. SDK objects release their native
 references on Drop. Device and context parents stay alive with their children.
@@ -34,6 +34,27 @@ and adds `~/.cargo/bin` to PATH for the command it runs. It also finds the local
 Clang headers prepared for this PC. It does not edit shell profiles.
 
 ## Run
+
+For the native egui viewer (Rust 1.88+, Wayland or X11 desktop with OpenGL):
+
+```bash
+scripts/viewer.sh
+# Optional: start in another view or select a specific camera.
+scripts/viewer.sh --view rgb
+scripts/viewer.sh --serial YOUR_SERIAL
+```
+
+The viewer starts capture automatically. Switch between **Depth**, **RGB**, and
+**Infrared** using the tabs. Adjust **Near/Far** to change depth colors; invalid
+pixels stay black. Hover over depth pixels to read their distance in millimeters.
+**Stop** releases the camera; **Start** reconnects it. Closing the window stops
+capture and releases SDK handles. The FPS, center distance, and active profiles
+are shown below the image.
+
+Capture runs on one background thread. The GUI receives owned buffers through
+one replaceable slot so slow painting cannot build up a queue of old frames.
+RGB/IR tabs are disabled when their streams are unavailable. Complete framesets
+do not imply synchronized exposures.
 
 Run all camera commands sequentially; one camera cannot be opened by competing
 processes.
@@ -117,9 +138,12 @@ For cross compilation from x86_64 Ubuntu:
 sudo apt install gcc-aarch64-linux-gnu libc6-dev-arm64-cross
 rustup target add aarch64-unknown-linux-gnu
 scripts/build-arm64.sh
+# Build the egui viewer for an ARM64 desktop:
+scripts/build-arm64.sh --viewer
 ```
 
 This produces `target/aarch64-unknown-linux-gnu/debug/examples/{enumerate,capture}`.
+The `--viewer` option produces `target/aarch64-unknown-linux-gnu/debug/orbbec-viewer`.
 `ORBBEC_V1_SYSROOT` can select a different target C sysroot. The cross build script
 also supports the user-local Ubuntu toolchain extracted into `.tools/` on this
 PC. Build against a sysroot compatible with the oldest glibc version you deploy
@@ -141,6 +165,10 @@ scripts/with-sdk.sh cargo fmt --all -- --check
 # Exclusive access to one physical camera required:
 scripts/with-sdk.sh cargo test -p orbbec-v1 --test hardware -- \
   --ignored --test-threads=1
+# Viewer worker capture/stop/reopen on the reference camera:
+scripts/with-sdk.sh cargo test -p orbbec-viewer -- --ignored --test-threads=1
+# Open the viewer, capture 30 frames, save its window, then exit:
+scripts/viewer.sh --smoke-test target/validation/viewer-depth.png
 ```
 
 Binding generation uses target-specific Clang types and emits compile-time

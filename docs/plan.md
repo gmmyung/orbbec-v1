@@ -11,6 +11,7 @@ Targets: x86_64-unknown-linux-gnu and aarch64-unknown-linux-gnu.
 - [x] Capture depth, RGB + depth, IR + depth, and RGB + depth + IR on the reference camera.
 - [x] Test error handling, repeated start/stop, and automatic cleanup/reopen.
 - [x] Build and link ARM64 examples against the actual ARM64 SDK.
+- [x] Add an egui viewer; verify depth/RGB/IR previews, worker stop/reopen, and ARM64 cross compilation.
 - [ ] Run the same C baseline and hardware test on a physical ARM64 board.
 - [ ] Test unplug/replug recovery on hardware.
 - [ ] Verify RGB/depth physical pairing with two cameras if needed by the project.

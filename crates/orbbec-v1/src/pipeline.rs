@@ -42,8 +42,11 @@ pub struct Format(pub u32);
 
 impl Format {
     pub const Y16: Self = Self(sys::OB_FORMAT_Y16);
+    pub const Y8: Self = Self(sys::OB_FORMAT_Y8);
+    pub const Y10: Self = Self(sys::OB_FORMAT_Y10);
     pub const Y11: Self = Self(sys::OB_FORMAT_Y11);
     pub const Y12: Self = Self(sys::OB_FORMAT_Y12);
+    pub const Y14: Self = Self(sys::OB_FORMAT_Y14);
     pub const RGB: Self = Self(sys::OB_FORMAT_RGB);
     pub const MJPG: Self = Self(sys::OB_FORMAT_MJPG);
     pub(crate) fn is_unpacked_depth(self) -> bool {

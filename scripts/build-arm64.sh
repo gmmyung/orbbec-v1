@@ -11,4 +11,8 @@ else
     echo "Install gcc-aarch64-linux-gnu and libc6-dev-arm64-cross first" >&2
     exit 1
 fi
+if [[ ${1:-} == --viewer ]]; then
+    shift
+    exec "$repo_dir/scripts/with-sdk.sh" cargo build --target aarch64-unknown-linux-gnu -p orbbec-viewer "$@"
+fi
 exec "$repo_dir/scripts/with-sdk.sh" cargo build --target aarch64-unknown-linux-gnu --examples "$@"

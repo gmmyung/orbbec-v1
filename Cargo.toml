@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/orbbec-v1-sys", "crates/orbbec-v1"]
+members = ["crates/orbbec-v1-sys", "crates/orbbec-v1", "crates/orbbec-viewer"]
 resolver = "2"
 
 [workspace.package]

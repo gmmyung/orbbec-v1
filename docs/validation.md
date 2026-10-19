@@ -76,3 +76,26 @@ applicable notices.
 Physical ARM64 capture, unplug/replug behavior, long-duration memory behavior,
 and two-camera RGB/depth pairing have not been tested. The hardware test and C
 baseline are ready to run on an ARM64 board. No firmware changes were made.
+
+## egui viewer
+
+Added `orbbec-viewer` with eframe/egui 0.33.3 and the Glow renderer. The viewer
+requires Rust 1.88 or newer and a Wayland/X11 desktop with OpenGL support.
+On this PC, each of the depth, RGB, and infrared window smoke tests successfully
+captured at least 30 framesets, saved the application's framebuffer, and exited
+after stopping the camera. Previews showed approximately 30 capture FPS.
+
+- `target/validation/viewer-depth.png`: depth colors, range sliders, and center distance.
+- `target/validation/viewer-rgb.png`: RGB preview at 640×480.
+- `target/validation/viewer-ir.png`: unpacked, normalized infrared preview at 640×400.
+
+All three saved windows were inspected. The worker hardware test passed two
+capture/stop/reopen cycles using owned depth, RGB, and IR buffers. Three new unit
+tests passed for depth coloring, IR normalization, and IR format/byte validation.
+The existing wrapper tests and lifetime documentation tests still pass. Clippy
+passed for all workspace targets with warnings denied.
+
+`scripts/build-arm64.sh --viewer` successfully built and linked the native viewer
+against the ARM64 SDK. A physical ARM64 desktop has not been tested. Logs for the
+viewer build, Clippy, unit tests, worker hardware test, and ARM64 build are kept
+under `target/validation/viewer-*.log`.
