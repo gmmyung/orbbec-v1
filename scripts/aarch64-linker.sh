@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-sdk_dir=${ORBBEC_V1_SDK_DIR:-"$repo_dir/.sdk/arm64/OrbbecSDK_v1.10.37/SDK"}
+sdk_dir=${ORBBEC_V1_SDK_DIR:-"$repo_dir/crates/orbbec-v1-bin-aarch64/sdk"}
 if command -v aarch64-linux-gnu-gcc >/dev/null; then
     exec aarch64-linux-gnu-gcc -Wl,-rpath-link,"$sdk_dir/lib" "$@"
 fi

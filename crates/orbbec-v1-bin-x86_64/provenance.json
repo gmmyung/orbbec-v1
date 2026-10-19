@@ -1,0 +1,40 @@
+{
+  "sdk_version": "1.10.37",
+  "target": "x86_64-unknown-linux-gnu",
+  "release": "https://github.com/orbbec/OrbbecSDK/releases/tag/v1.10.37",
+  "release_archive": {
+    "name": "OrbbecSDK_C_C++_v1.10.37_20260707_3f75820_linux_x64_release.zip",
+    "sha256": "0a8921e659ef172a535ec1631379d29c2542ad3afabe2b5592d20be1db0158c8"
+  },
+  "binaries_modified": false,
+  "sources": [
+    {
+      "name": "libusb-1.0.26.tar.bz2",
+      "url": "https://github.com/libusb/libusb/releases/download/v1.0.26/libusb-1.0.26.tar.bz2",
+      "sha256": "12ce7a61fc9854d1d2a1ffe095f7b5fac19ddba095c259e6067a46500381b5a5"
+    },
+    {
+      "name": "live.2022.04.26.tar.gz",
+      "url": "https://download.videolan.org/contrib/live555/live.2022.04.26.tar.gz",
+      "sha256": "24fd24d53da1ac8f8282173039e99c9952186c18404b1fc3b1d4c0e9f49414e7"
+    }
+  ],
+  "source_correspondence_verified": false,
+  "source_note": "Upstream source versions match observed version identifiers, but Orbbec-specific patches and build scripts have not been established. See THIRD_PARTY.md.",
+  "sha256": {
+    "sdk/config/OrbbecSDKConfig_v1.0.md": "2f5bbf732325c3bda8a85e96056e334d0e9d3931651011df96b93b15541ab95c",
+    "sdk/config/OrbbecSDKConfig_v1.0.xml": "3f46bc5ff10ef4bea78def33d0b01e105292c9de3a70f7d3198084a8584a5073",
+    "sdk/config/OrbbecSDKConfig_v1.0_CN.md": "10578b4da1bc66e431f83487b4b0dc92cdfb33f6ebda2e30a6ba914d5901787f",
+    "sdk/lib/libOrbbecSDK.so.1.10.37": "3c3299460af0e6c25b6a2494265944d8555ebc2a2536349383acc3b998e97e6b",
+    "sdk/lib/libdepthengine.so.2.0": "3ce4071478bc1253a6c860a2aafc7ca3b63b86ce2e7b856145451f88ac28226c",
+    "sdk/lib/liblive555.so": "08be964da89faba75994e03f70aa9a468dc079d5425b0b98a12876761d389f3a",
+    "sdk/lib/libob_usb.so": "4fbf5ad45091fdd7210c1e8744b2d19b3045ab5936b814e2fb772cf9419ac473",
+    "sources/libusb-1.0.26.tar.bz2": "12ce7a61fc9854d1d2a1ffe095f7b5fac19ddba095c259e6067a46500381b5a5",
+    "sources/live.2022.04.26.tar.gz": "24fd24d53da1ac8f8282173039e99c9952186c18404b1fc3b1d4c0e9f49414e7",
+    "licenses/LIBUSB-LGPL-2.1.txt": "5df07007198989c622f5d41de8d703e7bef3d0e79d62e24332ee739a452af62a",
+    "licenses/LIVE555-GPL-3.0.txt": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "licenses/LIVE555-LGPL-3.0.txt": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+    "licenses/RUST-MIT.txt": "ccf3a52b11d59f357343178847ab8b1589de7cc92aab0f20d63029ec92f31cb8",
+    "LICENSE.txt": "13a01fea4b997bc94b0b6e322a55b35bf18fc66bfdee9812bc34b726c6e6cf2f"
+  }
+}

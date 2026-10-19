@@ -139,3 +139,43 @@ thread. A documentation test verifies a live filter prevents stopping its
 pipeline. Workspace tests and Clippy pass. The ARM64 viewer builds and links;
 physical ARM64 capture remains untested. Logs are in
 `target/validation/point-cloud-*.log` and `viewer-point-cloud.log`.
+
+## Bundled crate packaging (2026-10-19)
+
+Added separate x86_64 and AArch64 binary crates with original SDK libraries,
+configuration, complete SDK notice, additional upstream license texts, upstream
+source snapshots, and per-file SHA-256 provenance. `vendor-sdk.py` compares each
+library with its entry in the checksum-verified official ZIP. Library bytes are
+unchanged. Pregenerated Rust bindings replace consumer-side bindgen; regeneration
+with the separate maintainer tool reproduced both checked-in target files.
+
+`cargo package --workspace --allow-dirty` verified all five packages. Binary crate
+archive sizes were 6,269,865 bytes for x86_64 and 6,054,736 bytes for AArch64, below
+the conservative 10,000,000-byte check. The distribution verification script
+checked packaged payload hashes and extracted the normalized published manifests
+into `/tmp`, then ran the safe wrapper's tests offline with all SDK, Clang, and
+loader environment overrides removed. All three unit tests and three compile-fail
+documentation tests passed. Target-specific dependency trees selected only the
+matching binary crate. The isolated run uses no source files or SDK from the
+checkout. Its target artifacts are under `target/distribution-check/`.
+
+Workspace tests (8 unit and 3 compile-fail documentation tests), Clippy with
+warnings denied, formatting, and rustdoc with warnings denied passed. The ARM64
+viewer linked successfully. Native workspace tests and an ARM64 sys-crate/viewer
+rebuild also passed while the maintainer `.sdk/` directory was temporarily moved
+out of its usual path. The cross-linker now uses the vendored ARM64 package for
+dependent-library resolution, rather than the ignored SDK cache.
+
+`package-viewer.py` built `target/dist/orbbec-viewer-x86_64/` with an executable
+RUNPATH of `$ORIGIN/orbbec-sdk/lib`. A complete copy relocated under `/tmp` started
+the GUI and SDK without loader environment overrides and while `.sdk/` was absent.
+Its camera worker returned "No camera found". `lsusb` confirmed neither Orbbec USB
+interface was connected during this validation. The live screenshot smoke test
+therefore timed out and did not produce a screenshot; fresh camera capture was
+not validated in this packaging change. The log is
+`target/validation/bundled-viewer-smoke.log`. The maintainer cache was restored.
+
+No packages were uploaded. The upstream live555 version/license discrepancy and
+unverified correspondence of upstream snapshots to Orbbec's private builds are
+recorded in `docs/distribution.md` and each binary crate's `THIRD_PARTY.md` and
+`provenance.json`. Included snapshots are not a declaration of full LGPL compliance.

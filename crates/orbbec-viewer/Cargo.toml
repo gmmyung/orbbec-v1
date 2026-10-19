@@ -5,9 +5,11 @@ version.workspace = true
 edition.workspace = true
 rust-version = "1.88"
 license.workspace = true
+readme = "README.md"
+include = ["src/**", "build.rs", "README.md", "LICENSE"]
 
 [dependencies]
-orbbec-v1 = { path = "../orbbec-v1" }
+orbbec-v1 = { path = "../orbbec-v1", version = "0.1.0" }
 eframe = { version = "0.33.3", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
 glam = "0.31.1"

@@ -5,9 +5,16 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+readme = "README.md"
+keywords = ["orbbec", "camera", "depth", "point-cloud"]
+categories = ["hardware-support", "api-bindings"]
+include = ["src/**", "examples/**", "tests/**", "README.md", "LICENSE"]
 
 [dependencies]
 orbbec-v1-sys.workspace = true
 
 [dev-dependencies]
 static_assertions = "1"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]

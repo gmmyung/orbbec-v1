@@ -1,0 +1,14 @@
+[package]
+name = "orbbec-v1-bin-aarch64"
+version = "1.10.37"
+edition = "2024"
+rust-version = "1.85"
+description = "Precompiled Orbbec SDK v1.10.37 libraries for Linux GNU aarch64"
+license-file = "LICENSE.txt"
+readme = "README.md"
+links = "orbbec_v1_bin_aarch64"
+include = ["src/**", "build.rs", "sdk/**", "sources/**", "licenses/**", "LICENSE.txt", "README.md", "THIRD_PARTY.md", "provenance.json"]
+categories = ["external-ffi-bindings", "hardware-support"]
+
+[package.metadata.docs.rs]
+targets = ["aarch64-unknown-linux-gnu"]

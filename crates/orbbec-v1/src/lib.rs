@@ -12,6 +12,7 @@ mod point_cloud;
 pub use device::{Context, Device, DeviceDescriptor, DeviceInfo};
 pub use error::{Error, Result};
 pub use frame::{DepthFrame, FrameSet, VideoFrame};
+pub use orbbec_v1_sys::sdk_directory;
 pub use pipeline::{Format, Pipeline, Sensor, VideoProfile};
 pub use point_cloud::{CameraIntrinsics, PointCloud, PointCloudFilter};
 

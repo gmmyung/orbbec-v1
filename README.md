@@ -5,7 +5,8 @@ Stereo S U3** (`SV1301S_U3`, firmware `RD3013`). Targets are Linux GNU x86_64 an
 AArch64. This is a local development repository; hardware results are recorded
 in [docs/validation.md](docs/validation.md).
 
-The workspace contains `orbbec-v1-sys` (generated C FFI) and `orbbec-v1` (a safe,
+The workspace contains architecture-specific binary packages, `orbbec-v1-sys`
+(pregenerated C FFI) and `orbbec-v1` (a safe,
 synchronous wrapper), plus `orbbec-viewer` (a native egui viewer). The safe API covers enumeration, selection by USB UID or
 serial, explicit video profiles, depth/RGB/IR capture, frame bytes, timestamps,
 depth scale, and checked depth samples. SDK objects release their native
@@ -13,25 +14,31 @@ references on Drop. Device and context parents stay alive with their children.
 
 ## Setup
 
-Install a Rust toolchain, Python 3, a C compiler, and Clang development files.
-On Ubuntu, the normal system dependency setup is:
+Install a Rust toolchain and a native C linker. The matching SDK libraries are
+bundled in architecture-specific Cargo dependencies. Building Rust crates needs
+no separate SDK download, Python, or libclang. On Ubuntu:
 
 ```bash
-sudo apt install build-essential clang libclang-dev python3 pkg-config
+sudo apt install build-essential pkg-config
 source "$HOME/.cargo/env"
-python3 scripts/fetch-sdk.py
 sudo bash scripts/install-udev-rules.sh
+cargo build --workspace
 ```
 
-The downloader fetches official release archives for both architectures, verifies
-their pinned SHA256 hashes, and preserves the libraries' symbolic links. SDK
-packages stay in `.sdk/`; binaries are not committed. USB rules give members of
-`plugdev` access to Orbbec interfaces; reconnect the camera if required. This PC
-already has the rule installed.
+USB rules give members of `plugdev` access to Orbbec interfaces; reconnect the
+camera if required. This PC already has the rule installed. The egui viewer also
+needs a working Wayland or X11 desktop and OpenGL drivers.
 
-`scripts/with-sdk.sh` adds the native SDK library directory to `LD_LIBRARY_PATH`
-and adds `~/.cargo/bin` to PATH for the command it runs. It also finds the local
-Clang headers prepared for this PC. It does not edit shell profiles.
+`cargo run` and `cargo test` configure the runtime library path automatically.
+`scripts/with-sdk.sh` remains a convenience for adding `~/.cargo/bin` to PATH;
+it supports an explicitly selected `ORBBEC_V1_SDK_DIR` and the local Clang headers
+used only by the binding-regeneration tool. It does not edit shell profiles.
+
+Original SDK ZIPs remain cached in the ignored `.sdk/` directory for maintainer
+work. The minimal native libraries, configuration, license texts, provenance,
+and upstream companion-library source archives are now included under
+`crates/orbbec-v1-bin-{x86_64,aarch64}/` for packaging. See
+[distribution details and source status](docs/distribution.md).
 
 ## Run
 
@@ -75,7 +82,8 @@ Run all camera commands sequentially; one camera cannot be opened by competing
 processes.
 
 ```bash
-# Independent C API baseline; no OpenCV or GUI required.
+# Optional maintainer C API baseline; requires original SDK headers.
+python3 scripts/fetch-sdk.py
 scripts/c-smoke.sh
 
 # Device information and indexed depth/color/IR profiles.
@@ -131,20 +139,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-When building from another repository, the sys crate still finds this checkout's
-`.sdk/` directory. Use this checkout's `scripts/with-sdk.sh cargo run ...`, or
-configure your application's runtime library path yourself.
+When building from another repository, Cargo obtains the matching SDK from the
+binary crate dependency. `cargo run` and `cargo test` load it automatically.
+For standalone deployment, copy `orbbec_v1::sdk_directory()` and configure the
+runtime loader path. The prepared crates are local and have not been published;
+a registry dependency will become usable after publication.
 
 For a separately installed SDK, set `ORBBEC_V1_SDK_DIR` to the directory containing
-`include/` and `lib/`. The build checks the library's ELF architecture. The safe
+`lib/` and optionally `config/`. The build checks every runtime library's ELF architecture. The safe
 wrapper checks the exact loaded SDK version before constructing a context.
-Headers and binaries must come from the same v1.10.37 package. Do not mix SDK v1
+Pregenerated bindings and binaries must match v1.10.37. Do not mix SDK v1
 and v2 libraries in the same application process.
 
 ## ARM64
 
-For native development on ARM64, use the same setup and run commands. The script
-selects the ARM64 package automatically. Actual camera capture on ARM64 still
+For native development on ARM64, use the same setup and run commands. Cargo
+selects the ARM64 binary dependency automatically. Actual camera capture on ARM64 still
 needs validation on the target board.
 
 For cross compilation from x86_64 Ubuntu:
@@ -159,14 +169,15 @@ scripts/build-arm64.sh --viewer
 
 This produces `target/aarch64-unknown-linux-gnu/debug/examples/{enumerate,capture}`.
 The `--viewer` option produces `target/aarch64-unknown-linux-gnu/debug/orbbec-viewer`.
-`ORBBEC_V1_SYSROOT` can select a different target C sysroot. The cross build script
+`ORBBEC_V1_SYSROOT` can select a different target C sysroot for maintainer binding
+regeneration; normal Cargo builds use pregenerated bindings. The cross build script
 also supports the user-local Ubuntu toolchain extracted into `.tools/` on this
 PC. Build against a sysroot compatible with the oldest glibc version you deploy
 to; a successful cross build does not establish runtime compatibility with every
 Jetson or other ARM64 distribution.
 
-Deploy the target binary with the **ARM64** SDK's `lib/` contents, preserving
-symbolic links, and retain its configuration and license files. Set
+Deploy the target binary with the **ARM64** SDK's staged `lib/` contents and
+retain its configuration, license, provenance, and applicable source materials. Set
 `LD_LIBRARY_PATH` on the board or configure the system loader. `liblive555.so`
 and `libob_usb.so` are runtime dependencies too; copying only `libOrbbecSDK.so`
 is insufficient. Do not copy the x86_64 package to the ARM64 board.
@@ -186,7 +197,7 @@ scripts/with-sdk.sh cargo test -p orbbec-viewer -- --ignored --test-threads=1
 scripts/viewer.sh --smoke-test target/validation/viewer-depth.png
 ```
 
-Binding generation uses target-specific Clang types and emits compile-time
+Pregenerated bindings use target-specific Clang types and contain compile-time
 layout assertions. Tests check depth buffer validation, loaded version, thread
 confinement, and compile failures for using frame bytes after release or stopping
 with live frames. The hardware test exercises native error conversion, five
