@@ -97,10 +97,8 @@ jobs:
         run: |
           rustup toolchain install 1.99.1 --profile minimal
           rustup default 1.99.1
-      - name: Run ARM64 tests and SDK enumeration
-        run: |
-          cargo test --workspace --locked
-          cargo run -p orbbec-v1 --example enumerate --locked
+      - name: Run ARM64 tests and SDK loading checks
+        run: cargo test --workspace --locked
       - name: Package a native Ubuntu 24.04 viewer
         run: |
           python3 scripts/package-viewer.py

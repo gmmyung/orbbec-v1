@@ -23,7 +23,7 @@ membership normally. No login credentials are stored in the repository.
 
 | Check | Result |
 | --- | --- |
-| Native workspace tests | 8 unit tests + 3 compile-fail documentation tests passed |
+| Native workspace tests | Unit tests and compile-fail documentation tests passed |
 | SDK/device enumeration | SDK 1.10.37; one legacy camera opened successfully |
 | Depth + RGB, desktop-cross-built CLI | 30 frames × 3 start/stop cycles passed |
 | Native depth + IR selected by serial | 30 frames × 2 cycles passed |
@@ -71,6 +71,12 @@ The manual publish workflow now gates publication on native ARM64 Ubuntu 24.04
 tests as well as the existing x86_64 verification. It produces a complete native
 ARM64 viewer bundle and enforces glibc 2.39 on both ARM64 builds. GitHub-hosted
 ARM64 runners have no physical camera; their hardware/EGL tests remain ignored.
+
+The first hosted ARM64 run also exposed an SDK crash when libusb initialization
+fails in an isolated USB environment. The safe wrapper now probes the same bundled
+USB backend using a temporary context before entering SDK context creation,
+returning a Rust error if it fails. A conditional unit test exercises this failure
+path on the hosted runner; device enumeration stays in the physical hardware tests.
 
 ## Reproduce on a configured Orin
 

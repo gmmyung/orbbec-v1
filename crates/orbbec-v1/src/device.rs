@@ -39,6 +39,11 @@ impl Context {
                 "Expected SDK 1.10.37, loaded {version}"
             )));
         }
+        if let Err(code) = sys::check_usb_backend() {
+            return Err(Error::new(format!(
+                "USB backend initialization failed (libusb error {code}); check access to the host USB subsystem"
+            )));
+        }
         ffi!(ob_set_logger_to_console, sys::OB_LOG_SEVERITY_WARN)?;
         let handle = owned!(ffi!(ob_create_context), ob_delete_context)?;
         Ok(Self {

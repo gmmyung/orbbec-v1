@@ -67,4 +67,16 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn unavailable_usb_backend_returns_a_rust_error() {
+        // Hosted ARM64 CI exposes the SDK's failing libusb-init path. On hosts
+        // with a usable USB subsystem, device/context checks remain hardware tests.
+        if let Err(code) = sys::check_usb_backend() {
+            let error = Context::new()
+                .err()
+                .expect("An unavailable USB backend must reject context creation");
+            assert!(error.message.contains(&format!("libusb error {code}")));
+        }
+    }
 }
