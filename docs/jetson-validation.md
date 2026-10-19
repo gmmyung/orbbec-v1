@@ -103,3 +103,67 @@ After a desktop login, launch it with `--view cloud`.
 
 Detailed logs were retained in the target's `~/orbbec-v1/target/validation/`
 and copied to the development PC's `target/validation/jetson/`.
+
+## Published crates.io 0.1.0 validation — 2026-10-19
+
+After publication, a separate project was created on the same Orin at
+`~/orbbec-v1-cratesio-test.2ID3pc/`. Its dependency is:
+
+```toml
+[dependencies]
+orbbec-v1 = "=0.1.0"
+```
+
+A fresh `CARGO_HOME` inside that directory prevented reuse of the development
+checkout's registry cache. SDK, Clang, and loader overrides were removed. Cargo
+metadata confirmed that the API, sys, and AArch64 binary dependencies all came
+from crates.io, with no path patches and no x86_64 binary dependency. Cached
+archive checksums matched their Cargo lockfile entries, and all native payload hashes
+matched the packaged provenance.
+
+The published API and viewer archives were also downloaded directly from
+crates.io and verified against registry checksums. The API's hardware tests and
+examples ran in the fresh consumer. The viewer was built and tested from its
+published archive, using the registry API/sys/native dependencies.
+
+| Check | Result on the requested retry |
+| --- | --- |
+| Fresh registry consumer | Built and loaded SDK 1.10.37 |
+| Serial selection, depth + RGB | 300 frames × 3 start/stop cycles passed |
+| Serial selection, depth + IR | 150 frames × 2 start/stop cycles passed |
+| Sustained depth with RGB | All 120 frames after 30-frame warmup were nonempty; minimum 238,336 valid pixels out of 256,000 |
+| Sustained depth with IR | All 120 frames after 30-frame warmup were nonempty; minimum 238,688 valid pixels out of 256,000 |
+| Published API hardware tests | Both calibrated XYZ and repeated capture/error recovery passed |
+| Calibrated XYZ | 640×400, 239,716 valid points; metric depth and axes checks passed |
+| Published viewer | Five unit tests and both camera/GPU hardware tests passed |
+| NVIDIA GPU readback | 59,917 sampled points, 33,226 colored pixels; no GL error |
+| Native viewer ABI | Highest referenced glibc version 2.39; `--help` passed |
+
+RGB capture cycles took 11.23–11.40 seconds for 300 frames including startup and
+stop; IR cycles took 5.83–5.84 seconds for 150 frames. Final center depth was
+about 1.87 m. These are functional checks, not a sustained performance benchmark.
+
+### Initial empty-depth finding
+
+The initial capture runs delivered frames but later depth buffers were entirely
+zero. The existing source checkout reproduced the same behavior. A read-only
+property probe observed `LDP enabled=true`, `LDP protection active=true`, and
+`Laser enabled=false`; a later query observed protection inactive and the laser
+enabled. Orbbec documents that laser distance protection can turn off the laser
+when an obstacle is too close; see the SDK v1 guide's LDP sections in
+[the official API guide](https://orbbec.github.io/OrbbecSDK/doc/tutorial/English/OrbbecSDK_C%2B%2B_API_user_guide-v1.0.pdf).
+
+After the user requested a retry, the capture cycles, hardware tests, and GPU
+test were repeated successfully. Additional checks required nonempty depth
+throughout the post-warmup samples. Successful frame delivery alone would have
+missed this condition; the initial first-frame point-cloud test also passed
+before the later frames became empty.
+
+The graphical desktop was still at GDM, so interactive window controls were
+not tested. Actual NVIDIA rendering used the published viewer's headless EGL
+test. SDK frame-sync and USB cancellation warnings remained in the logs.
+
+The test project, isolated Cargo cache, logs, and rendered PNG remain on the
+Jetson. Its `report.json` records dependency paths, archive hashes, and results.
+Local copies are under `target/validation/jetson-cratesio/`, including
+`after/registry-point-cloud.png` and the complete before/after logs.
