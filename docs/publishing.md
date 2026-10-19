@@ -20,7 +20,7 @@ Actions → **Publish orbbec-v1** → **Run workflow** on the default branch.
 - `publish=false` (default): tests, lint, isolated package verification, ARM64
   viewer linking, and a registry-aware release plan. No credentials needed.
 - `publish=true`: the same verification followed by sequential publication.
-- `authentication=token`: initial publication, using the environment secret.
+- `authentication=token`: initial publication, using the Actions secret.
 - `authentication=trusted`: subsequent releases, using GitHub OIDC.
 
 Equivalent verification command:
@@ -43,12 +43,15 @@ value belongs in this repository or in workflow dispatch inputs.
 Revoke the token shared in chat and create a replacement on
 https://crates.io/settings/tokens. Do not commit it, paste it in workflow inputs,
 or put it on a command line. Its permissions must allow creating these new crates
-and publishing versions. The workflow reads it only from an environment secret.
+and publishing versions. The workflow reads it from `secrets.CARGO_REGISTRY_TOKEN`
+and passes it to the publishing step as an environment variable. A repository
+Actions secret works; no duplicate `crates-io` environment secret is required.
+An environment secret with the same name can also be used.
 
 Set the secret interactively in your terminal (the value is hidden):
 
 ```bash
-gh secret set CARGO_REGISTRY_TOKEN --repo gmmyung/orbbec-v1 --env crates-io
+gh secret set CARGO_REGISTRY_TOKEN --repo gmmyung/orbbec-v1
 ```
 
 After a successful verification run, trigger initial publication:
@@ -77,10 +80,10 @@ Once each crate exists, configure its Settings → Trusted Publishing:
 
 Configure all five crates for the same workflow/environment. The official
 `rust-lang/crates-io-auth-action` exchanges GitHub OIDC for a temporary token and
-revokes it at job completion. Then delete the bootstrap environment secret:
+revokes it at job completion. Then delete the bootstrap repository secret:
 
 ```bash
-gh secret delete CARGO_REGISTRY_TOKEN --repo gmmyung/orbbec-v1 --env crates-io
+gh secret delete CARGO_REGISTRY_TOKEN --repo gmmyung/orbbec-v1
 ```
 
 Use `authentication=trusted` for later publications. Bump the appropriate Cargo
