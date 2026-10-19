@@ -62,10 +62,13 @@ scripts/build-arm64.sh --viewer
 ```
 
 The distribution check uses Cargo's workspace packaging support (validated with
-Cargo 1.99.1), verifies package size and payload hashes, extracts the normalized
-published manifests into a temporary directory outside the checkout, and runs
-the safe crate's tests with SDK/Clang/loader environment overrides removed. It
-also checks the dependency tree for each target. No publication takes place.
+Cargo 1.99.1), verifies package size and payload hashes, extracts all normalized
+published manifests into a temporary directory outside the checkout, and tests
+the entire unpacked workspace with the release lockfile and SDK/Clang/loader
+environment overrides removed. It also checks both target dependency trees.
+Archive creation uses `--no-verify` because Cargo's temporary registry can reuse
+stale extracted sources when the same unpublished version is rebuilt. The tests
+of the exact unpacked artifacts provide verification instead. No publication takes place.
 Older Cargo versions may require publishing the dependency packages in order
 before packaging dependent crates against crates.io.
 

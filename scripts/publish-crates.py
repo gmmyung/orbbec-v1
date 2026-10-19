@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import urllib.error
 import urllib.request
@@ -111,7 +112,7 @@ def main():
         parser.error("Requested version does not match orbbec-v1/Cargo.toml")
     target = Path(metadata["target_directory"])
     if not args.prepared:
-        subprocess.run([cargo, "package", "--workspace", "--locked"], cwd=ROOT, check=True)
+        subprocess.run([sys.executable, str(ROOT / "scripts/check-distribution.py")], cwd=ROOT, check=True)
     # Check VCS identity even when reusing previously prepared artifacts.
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     for name in ORDER:

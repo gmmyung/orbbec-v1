@@ -23,9 +23,12 @@ def main():
     args = parser.parse_args()
     cargo = shutil.which("cargo") or str(Path.home() / ".cargo/bin/cargo")
     env = os.environ.copy()
-    for key in ["ORBBEC_V1_SDK_DIR", "ORBBEC_V1_SYSROOT", "LD_LIBRARY_PATH", "BINDGEN_EXTRA_CLANG_ARGS", "LIBCLANG_PATH"]:
+    for key in ["ORBBEC_V1_SDK_DIR", "ORBBEC_V1_SYSROOT", "LD_LIBRARY_PATH", "BINDGEN_EXTRA_CLANG_ARGS", "LIBCLANG_PATH", "CARGO_REGISTRY_TOKEN", "CARGO_REGISTRIES_CRATES_IO_TOKEN"]:
         env.pop(key, None)
-    cmd = [cargo, "package", "--workspace"]
+    # Cargo's temporary registry assumes a version's extracted source is immutable.
+    # Repackaging an unpublished version can otherwise verify stale cached code.
+    # Verify the exact archives below by testing their complete unpacked workspace.
+    cmd = [cargo, "package", "--workspace", "--no-verify"]
     if args.allow_dirty:
         cmd.append("--allow-dirty")
     subprocess.run(cmd, cwd=ROOT, env=env, check=True)
@@ -49,15 +52,16 @@ def main():
                 for name, expected_hash in provenance["sha256"].items():
                     actual = hashlib.sha256((unpacked / name).read_bytes()).hexdigest()
                     assert actual == expected_hash, f"Payload checksum mismatch: {name}"
-        members = sorted(p.parent for p in scratch.glob("*/Cargo.toml") if not p.parent.name.startswith("orbbec-v1-viewer-"))
+        members = sorted(p.parent for p in scratch.glob("*/Cargo.toml"))
         manifest = '[workspace]\nresolver = "2"\nmembers = ' + json.dumps([p.name for p in members]) + '\n\n[patch.crates-io]\n'
         for p in members:
             name = p.name.rsplit("-", 1)[0]
             manifest += f'{name} = {{ path = "{p.name}" }}\n'
         (scratch / "Cargo.toml").write_text(manifest)
+        shutil.copyfile(ROOT / "Cargo.lock", scratch / "Cargo.lock")
         # Reuse cached third-party dependencies, but none of the checkout's code or SDK.
         env["CARGO_TARGET_DIR"] = str(target / "distribution-check")
-        subprocess.run([cargo, "test", "--offline", "-p", "orbbec-v1"], cwd=scratch, env=env, check=True)
+        subprocess.run([cargo, "test", "--workspace", "--locked", "--offline"], cwd=scratch, env=env, check=True)
         for triple, selected, excluded in [
             ("x86_64-unknown-linux-gnu", "orbbec-v1-bin-x86_64", "orbbec-v1-bin-aarch64"),
             ("aarch64-unknown-linux-gnu", "orbbec-v1-bin-aarch64", "orbbec-v1-bin-x86_64"),
@@ -65,10 +69,10 @@ def main():
             tree = subprocess.check_output([cargo, "tree", "--offline", "-p", "orbbec-v1", "--target", triple], cwd=scratch, env=env, text=True)
             assert selected in tree and excluded not in tree, f"Wrong architecture dependency: {triple}"
     (target / "distribution-check").mkdir(exist_ok=True)
-    (target / "distribution-check/report.json").write_text(json.dumps({"package_sizes_bytes": sizes, "isolated_consumer_tests": "passed", "target_dependency_selection": "passed", "published": False}, indent=2) + "\n")
+    (target / "distribution-check/report.json").write_text(json.dumps({"package_sizes_bytes": sizes, "isolated_consumer_tests": "passed", "isolated_workspace_tests": "passed", "target_dependency_selection": "passed", "published": False}, indent=2) + "\n")
     for name, size in sizes.items():
         print(f"{name}: {size:,} bytes")
-    print("Packaged consumer passed; no SDK installation, loader environment, or libclang needed.")
+    print("Packaged workspace passed; no SDK installation, loader environment, or libclang needed.")
 
 
 if __name__ == "__main__":
